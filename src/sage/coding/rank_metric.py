@@ -1,8 +1,9 @@
 from sage.coding.linear_code import AbstractLinearCode
 from sage.rings.integer import Integer
+from sage.coding.relative_finite_field_extension import *
 #import sage.coding.gabidulin
 
-def to_matrix_representation(Fqm, Fq, v):
+def to_matrix_representation(base_field, sub_field, v):
     """
     """
     if not v.is_vector():
@@ -13,7 +14,7 @@ def to_matrix_representation(Fqm, Fq, v):
     g = matrix(Fq, m, n, lambda i,j: FE.relative_field_representation(v[j])[i])
     return g
 
-def from_matrix_representation(Fqm, Fq, m):
+def from_matrix_representation(base_field, sub_field, m):
     """
     """
     if not m.is_matrix():
@@ -24,14 +25,14 @@ def from_matrix_representation(Fqm, Fq, m):
         v.append(FE.absolute_field_representation(m.column(i)))
     return vector(v)
 
-def rank_weight(Fqm, Fq, c):
+def rank_weight(base_field, sub_field, c):
     """
     """
     if c.is_vector(c):
         c = _to_matrix_representation(Fqm, Fq, c)
     return c.rank()
 
-def rank_distance(Fqm, Fq, a, b):
+def rank_distance(base_field, sub_field, a, b):
     """
     """
     if a.is_vector():
@@ -41,7 +42,7 @@ def rank_distance(Fqm, Fq, a, b):
     return (a - b).rank()
 
 
-class AbstractLinearRankMetricCode(AbstractLinearCode): #shoudl this be module?
+class AbstractLinearRankMetricCode(AbstractLinearCode):
     """
     Abstract class for linear rank metric codes.
 
@@ -59,7 +60,7 @@ class AbstractLinearRankMetricCode(AbstractLinearCode): #shoudl this be module?
     _registered_decoders = {}
 
     def __init__(self, base_field, sub_field, length, dimension, \
-            field_extension=None, default_encoder_name, default_decoder_name):
+            default_encoder_name, default_decoder_name, field_extension=None):
         """
         Initializes mandatory parameters that every linear rank metric code has.
 
@@ -98,6 +99,8 @@ class AbstractLinearRankMetricCode(AbstractLinearCode): #shoudl this be module?
         self._dimension = dimension
         self._field_extension = field_extension
 
+        #TODO: super()
+
     def base_field(self):
         """
         Returns the base field of ``self``.
@@ -116,23 +119,25 @@ class AbstractLinearRankMetricCode(AbstractLinearCode): #shoudl this be module?
         """
         return self._field_extension
 
-    def length(self):
-        """
-        Returns the length of ``self``.
-        """
-        return self._length
-
-    def dimension(self):
-        """
-        Returns the dimension of ``self``.
-        """
-        return self._dimension
-
     def distance(self, left, right):
         """
         Returns the rank of the matrix of ``left`` - ``right``.
         """
         return rank_distance(self._base_field, self._sub_field, left, right)
+
+    def minimum_distance(self):
+        r"""
+        Return an error requiring to override ``minimum_distance`` in ``self``.
+
+        There is currently no general algorithm calculating the minimum distance
+        of linear rank metric codes. One has to implement the specific method
+        when writing a new code class which inherits from
+        :class:`AbstractLinearRankMetricCode`.
+        The generic call to ``minimum_distance`` has to fail.
+        """
+
+        #TODO: check that the formatting self.parent() works
+        raise RuntimeError("Please override minimum_distance in the implementation of {}".format(self.parent()))
 
     def weight(self, word):
         """
